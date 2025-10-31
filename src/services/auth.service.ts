@@ -1,10 +1,8 @@
 import { User } from '@prisma/client';
-import axios from 'axios';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/db';
 import { QuestionRequestDTO, RegisterRequestDTO } from '../dto/auth.dto';
 import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
 import {
   generateOTP,
   sendOTPEmail,
@@ -247,98 +245,99 @@ class AuthService {
     return safeUser;
   }
 
-  async google(token: string) {
-    if (!token) {
-      throw new ApiError(400, 'Google token is required');
-    }
-    const googleResponse = await axios.get(
-      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
-    );
-    const { email, name, family_name, given_name, picture } =
-      googleResponse.data;
-    if (!email) {
-      throw new ApiResponse(400, null, 'Google account email not found');
-    }
-    const user = await UserModel.findOne({ email });
-    if (user) {
-      if (user.provider !== 'google') {
-        throw new ApiResponse(
-          403,
-          null,
-          `This email is already registered using ${user.provider}. Please use the correct login method.`,
-        );
-      } else {
-        const [accessToken, refreshToken] = await Promise.all([
-          generateToken('1d', {
-            email: user.email,
-            userid: user.id,
-            type: 'access',
-          }),
-          generateToken('7d', {
-            email: user.email,
-            userid: user.id,
-            type: 'refresh',
-          }),
-        ]);
+  // async google(token: string) {
+  //   if (!token) {
+  //     throw new ApiError(400, 'Google token is required');
+  //   }
+  //   const googleResponse = await axios.get(
+  //     `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+  //   );
+  //   const { email, name, family_name, given_name, picture } =
+  //     googleResponse.data;
+  //   if (email) {
+  //     const googleUser = await Prisma.user.findUnique({ email });
+  //   } else {
+  //     throw new ApiResponse(400, null, 'Google account email not found');
+  //   }
+  //   if (googleUser) {
+  //     if (goo.provider !== 'google') {
+  //       throw new ApiResponse(
+  //         403,
+  //         null,
+  //         `This email is already registered using ${user.provider}. Please use the correct login method.`,
+  //       );
+  //     } else {
+  //       const [accessToken, refreshToken] = await Promise.all([
+  //         generateToken('1d', {
+  //           email: user.email,
+  //           id: user.id,
+  //           type: 'access',
+  //         }),
+  //         generateToken('7d', {
+  //           email: user.email,
+  //           id: user.id,
+  //           type: 'refresh',
+  //         }),
+  //       ]);
 
-        await UserModel.findByIdAndUpdate(
-          user.id,
-          {
-            last_login: new Date(),
-            profile_picture: picture,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          },
-          { new: true },
-        );
+  //       await UserModel.findByIdAndUpdate(
+  //         user.id,
+  //         {
+  //           last_login: new Date(),
+  //           profile_picture: picture,
+  //           accessToken: accessToken,
+  //           refreshToken: refreshToken,
+  //         },
+  //         { new: true },
+  //       );
 
-        return {
-          user,
-          accessToken,
-          refreshToken,
-          message: 'Login successful',
-        };
-      }
-    } else {
-      const randomPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+  //       return {
+  //         user,
+  //         accessToken,
+  //         refreshToken,
+  //         message: 'Login successful',
+  //       };
+  //     }
+  //   } else {
+  //     const randomPassword = Math.random().toString(36).slice(-8);
+  //     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-      const newUser = await UserModel.create({
-        email,
-        full_name: given_name || name,
-        last_name: family_name,
-        password: hashedPassword,
-        profile_picture: picture,
-        provider: 'google',
-        timezone: 'asia',
-        last_login: new Date(),
-        is_active: true,
-        is_verified: true,
-      });
+  //     const newUser = await UserModel.create({
+  //       email,
+  //       full_name: given_name || name,
+  //       last_name: family_name,
+  //       password: hashedPassword,
+  //       profile_picture: picture,
+  //       provider: 'google',
+  //       timezone: 'asia',
+  //       last_login: new Date(),
+  //       is_active: true,
+  //       is_verified: true,
+  //     });
 
-      const [accessToken, refreshToken] = await Promise.all([
-        generateToken('1d', {
-          email: newUser.email,
-          id: newUser.id,
-          type: 'access',
-        }),
-        generateToken('7d', {
-          email: newUser.email,
-          id: newUser.id,
-          type: 'refresh',
-        }),
-      ]);
-      newUser.accessToken = accessToken;
-      newUser.refreshToken = refreshToken;
-      await newUser.save();
-      return {
-        user: newUser,
-        accessToken,
-        refreshToken,
-        message: 'Signup successfully',
-      };
-    }
-  }
+  //     const [accessToken, refreshToken] = await Promise.all([
+  //       generateToken('1d', {
+  //         email: newUser.email,
+  //         id: newUser.id,
+  //         type: 'access',
+  //       }),
+  //       generateToken('7d', {
+  //         email: newUser.email,
+  //         id: newUser.id,
+  //         type: 'refresh',
+  //       }),
+  //     ]);
+  //     newUser.accessToken = accessToken;
+  //     newUser.refreshToken = refreshToken;
+  //     await newUser.save();
+  //     return {
+  //       user: newUser,
+  //       accessToken,
+  //       refreshToken,
+  //       message: 'Signup successfully',
+  //     };
+  //   }
 }
+
 
 export const authService = new AuthService();

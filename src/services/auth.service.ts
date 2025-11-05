@@ -1,63 +1,53 @@
 import { User } from '@prisma/client';
+import axios from 'axios';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/db';
 import { QuestionRequestDTO, RegisterRequestDTO } from '../dto/auth.dto';
 import { ApiError } from '../utils/ApiError';
+import { ApiResponse } from '../utils/ApiResponse';
 import {
   generateOTP,
   sendOTPEmail,
   sendVerificationEmail,
 } from '../utils/email.utils';
 import { generateToken, verifyToken } from '../utils/token';
+
 class AuthService {
-  register = async (user: RegisterRequestDTO) => {
+  register = async (userData: RegisterRequestDTO) => {
     const existingUser = await prisma.user.findUnique({
-      where: { email: user.email },
+      where: { email: userData.email },
     });
 
     if (existingUser) {
       throw new ApiError(400, 'User already exists. Please login');
     }
-    const hashedPassword = await bcrypt.hash(user.password, 10);
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     const newUser = await prisma.user.create({
       data: {
-        ...user,
+        ...userData,
         password: hashedPassword,
+        otp,
+        otp_expiry: otpExpiry,
+        provider: 'email',
         last_login: new Date(),
         is_active: true,
       },
     });
-    const [accessToken, refreshToken] = await Promise.all([
-      generateToken('1d', {
-        email: user.email,
-        id: newUser.id,
-        type: 'access',
-      }),
-      generateToken('7d', {
-        email: user.email,
-        id: newUser.id,
-        type: 'refresh',
-      }),
-    ]);
-    const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    await prisma.user.update({
-      where: { id: newUser.id },
-      data: {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        otp,
-        otp_expiry: otpExpiry,
-      },
-    });
-    await sendOTPEmail(user.email, otp.toString());
+    await sendOTPEmail(userData.email, otp);
+    const { password, ...user } = newUser;
+    console.log(password);
 
-    return newUser;
+    return user;
   };
 
   verifyOtp = async (email: string, otp: number) => {
     const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user) throw new ApiError(404, 'User not found');
+
     if (user.is_verify) {
       throw new ApiError(400, 'Email already verified');
     }
@@ -67,31 +57,34 @@ class AuthService {
     if (user.otp_expiry && user.otp_expiry < new Date()) {
       throw new ApiError(400, 'OTP expired');
     }
+
     const updatedUser = await prisma.user.update({
       where: { email },
       data: {
         is_verify: true,
-        is_active: true,
         otp: 0,
         otp_expiry: null,
       },
     });
+
     return updatedUser;
   };
 
   login = async (email: string, password: string) => {
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log(user);
+
     if (!user) {
       throw new ApiError(400, 'User not found, please register');
     }
     if (!user.is_verify) {
       throw new ApiError(400, 'Please verify your email before logging in');
     }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new ApiError(400, 'Invalid password');
     }
+
     const [accessToken, refreshToken] = await Promise.all([
       generateToken('1d', {
         email: user.email,
@@ -112,7 +105,10 @@ class AuthService {
         last_login: new Date(),
       },
     });
-    return updatedUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userWithoutPassword } = updatedUser;
+
+    return userWithoutPassword;
   };
 
   forgot = async (email: string) => {
@@ -122,13 +118,17 @@ class AuthService {
     if (!user) {
       throw new ApiError(404, 'User not found');
     }
-    const token = await generateToken('10m', {
+
+    const token = await generateToken('3m', {
       email: user.email,
       id: user.id,
       type: 'access',
     });
     await sendVerificationEmail(email, token);
-    return user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
   };
 
   async resetPassword(newPassword: string, token: string) {
@@ -151,12 +151,17 @@ class AuthService {
         password: newPassword,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...res } = user;
+
+    return res;
   }
 
   async logout(refreshToken: string) {
     if (!refreshToken) {
       throw new ApiError(400, 'Refresh token is required');
     }
+
     const user = await prisma.user.findFirst({
       where: { refresh_token: refreshToken },
     });
@@ -171,8 +176,10 @@ class AuthService {
       where: { id: user.id },
       data: { refresh_token: '' },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...res } = user;
 
-    return user;
+    return res;
   }
   async refresh(refreshToken: string) {
     const { valid, payload } = await verifyToken(refreshToken);
@@ -185,6 +192,7 @@ class AuthService {
       if (!user) {
         throw new ApiError(400, 'User does not exist. Please Register');
       }
+
       const [accessToken, newRefreshToken] = await Promise.all([
         generateToken('1d', {
           email: user.email,
@@ -204,11 +212,118 @@ class AuthService {
           refresh_token: newRefreshToken,
         },
       });
-      return updatedUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...res } = updatedUser;
+
+      return res;
     }
     throw new ApiError(400, 'Invalid or expired refresh token');
   }
 
+  async google(token: string) {
+    if (!token) {
+      throw new ApiError(400, 'Google token is required');
+    }
+    const googleResponse = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+    );
+    const data = googleResponse.data as {
+      email: string;
+      name: string;
+      picture: string;
+    };
+    const { email, name, picture } = data;
+
+    if (!email) {
+      throw new ApiResponse(400, null, 'Google account email not found');
+    }
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (user) {
+      if (user.provider !== 'google') {
+        throw new ApiResponse(
+          403,
+          null,
+          `This email is already registered using ${user.provider}. Please use the correct login method.`,
+        );
+      }
+
+      const [access_token, refresh_token] = await Promise.all([
+        generateToken('1d', {
+          email: user.email,
+          id: user.id,
+          type: 'access',
+        }),
+        generateToken('7d', {
+          email: user.email,
+          id: user.id,
+          type: 'refresh',
+        }),
+      ]);
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          last_login: new Date(),
+          profile: picture,
+          access_token,
+          refresh_token,
+        },
+      });
+
+      return {
+        user: updatedUser,
+        access_token,
+        refresh_token,
+        message: 'Login successful',
+      };
+    }
+
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        name: name,
+        password: hashedPassword,
+        profile: picture,
+        provider: 'google',
+        last_login: new Date(),
+        is_active: true,
+        is_verify: true,
+      },
+    });
+
+    const [access_token, refresh_token] = await Promise.all([
+      generateToken('1d', {
+        email: newUser.email,
+        id: newUser.id,
+        type: 'access',
+      }),
+      generateToken('7d', {
+        email: newUser.email,
+        id: newUser.id,
+        type: 'refresh',
+      }),
+    ]);
+
+    await prisma.user.update({
+      where: { id: newUser.id },
+      data: { access_token, refresh_token },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...res } = newUser;
+    return {
+      user: res,
+      access_token,
+      refresh_token,
+      message: 'Signup successfully',
+    };
+  }
   async question(userData: QuestionRequestDTO) {
     if (!userData.token) throw new ApiError(400, 'token required');
 
@@ -245,99 +360,26 @@ class AuthService {
     return safeUser;
   }
 
-  // async google(token: string) {
-  //   if (!token) {
-  //     throw new ApiError(400, 'Google token is required');
-  //   }
-  //   const googleResponse = await axios.get(
-  //     `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
-  //   );
-  //   const { email, name, family_name, given_name, picture } =
-  //     googleResponse.data;
-  //   if (email) {
-  //     const googleUser = await Prisma.user.findUnique({ email });
-  //   } else {
-  //     throw new ApiResponse(400, null, 'Google account email not found');
-  //   }
-  //   if (googleUser) {
-  //     if (goo.provider !== 'google') {
-  //       throw new ApiResponse(
-  //         403,
-  //         null,
-  //         `This email is already registered using ${user.provider}. Please use the correct login method.`,
-  //       );
-  //     } else {
-  //       const [accessToken, refreshToken] = await Promise.all([
-  //         generateToken('1d', {
-  //           email: user.email,
-  //           id: user.id,
-  //           type: 'access',
-  //         }),
-  //         generateToken('7d', {
-  //           email: user.email,
-  //           id: user.id,
-  //           type: 'refresh',
-  //         }),
-  //       ]);
-
-  //       await UserModel.findByIdAndUpdate(
-  //         user.id,
-  //         {
-  //           last_login: new Date(),
-  //           profile_picture: picture,
-  //           accessToken: accessToken,
-  //           refreshToken: refreshToken,
-  //         },
-  //         { new: true },
-  //       );
-
-  //       return {
-  //         user,
-  //         accessToken,
-  //         refreshToken,
-  //         message: 'Login successful',
-  //       };
-  //     }
-  //   } else {
-  //     const randomPassword = Math.random().toString(36).slice(-8);
-  //     const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-  //     const newUser = await UserModel.create({
-  //       email,
-  //       full_name: given_name || name,
-  //       last_name: family_name,
-  //       password: hashedPassword,
-  //       profile_picture: picture,
-  //       provider: 'google',
-  //       timezone: 'asia',
-  //       last_login: new Date(),
-  //       is_active: true,
-  //       is_verified: true,
-  //     });
-
-  //     const [accessToken, refreshToken] = await Promise.all([
-  //       generateToken('1d', {
-  //         email: newUser.email,
-  //         id: newUser.id,
-  //         type: 'access',
-  //       }),
-  //       generateToken('7d', {
-  //         email: newUser.email,
-  //         id: newUser.id,
-  //         type: 'refresh',
-  //       }),
-  //     ]);
-  //     newUser.accessToken = accessToken;
-  //     newUser.refreshToken = refreshToken;
-  //     await newUser.save();
-  //     return {
-  //       user: newUser,
-  //       accessToken,
-  //       refreshToken,
-  //       message: 'Signup successfully',
-  //     };
-  //   }
+  async get_user(userId: number) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+    const { password, ...safeUser } = user;
+    console.log(password);
+    return safeUser;
+  }
+  async delete_user(userId: number) {
+    const user = await prisma.user.delete({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+    return user;
+  }
 }
-
 
 export const authService = new AuthService();

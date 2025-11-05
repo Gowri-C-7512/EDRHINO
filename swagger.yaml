@@ -1,0 +1,595 @@
+openapi: 3.0.0
+info:
+  title: EDRHINO
+  version: 1.0.0
+  description: API to demonstrate example responses in Swagger YAML
+
+servers:
+  - url: http://localhost:5000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: api-key
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          example: 'John Doe'
+        email:
+          type: string
+          format: email
+          example: 'johndoe@example.com'
+        password:
+          type: string
+          description: 'Hashed password (will not be exposed in responses)'
+          example: '$2b$10$exampleHash'
+        provider:
+          type: string
+          enum: ['email', 'google']
+          example: 'email'
+        is_active:
+          type: boolean
+          example: true
+        is_verify:
+          type: boolean
+          example: true
+        last_login:
+          type: string
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
+        otp:
+          type: number
+          example: 123456
+        board:
+          type: string
+          example: 'matriculation'
+        subject:
+          type: string
+          example: 'maths'
+        standard:
+          type: string
+          example: '10th'
+        accessToken:
+          type: string
+          nullable: true
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        refreshToken:
+          type: string
+          nullable: true
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
+    Room:
+      type: object
+      properties:
+        room_id:
+          type: number
+          example: 1
+        room_name:
+          type: string
+          example: 'John Doe'
+        user_id:
+          type: number
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
+
+  responses:
+    200:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: number
+                example: 201
+              data:
+                $ref: '#/components/schemas/users'
+              success:
+                type: boolean
+                example: true
+
+    400:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: number
+                example: 400
+              success:
+                type: boolean
+                example: false
+
+    500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: number
+                example: 500
+              message:
+                type: string
+                example: Internal server error
+              success:
+                type: boolean
+                example: false
+  responses:
+    200:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: number
+                example: 201
+              data:
+                $ref: '#/components/schemas/room'
+              success:
+                type: boolean
+                example: true               
+security:
+  - bearerAuth: []
+  - ApiKeyAuth: []
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: P@ssw0rd
+      responses:
+        201:
+          description: User successfully registered
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/otp-verify:
+    post:
+      summary: verify the email
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                otp:
+                  type: number
+                  example: 123456  
+      responses:
+        201:
+          description: User successfully registered
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/login:
+    post:
+      summary: login the user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: P@ssw0rd
+      responses:
+        201:
+          description: User successfully registered
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500' 
+  /api/v1/auth/forgot-password:
+    post:
+      summary: forgot password
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+      responses:
+        201:
+          description: link send to your email successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/reset-password:
+    post:
+      summary: Reset password
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                newPassword:
+                  type: string
+                  format: password
+                  example: P@ssw0rd
+      responses:
+        201:
+          description: reset password successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/logout:
+    post:
+      summary: logout the user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX
+      responses:
+        201:
+          description: logout successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/refresh:
+    post:
+      summary: login the user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX                
+      responses:
+        201:
+          description: changed the refresh token successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/google:
+    post:
+      summary: sign in with google
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX                
+      responses:
+        201:
+          description: sign in with google successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500' 
+  /api/v1/auth/question:
+    post:
+      summary: register subject and standard
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                 subject:
+                  type: string
+                  example: maths
+                 standard:
+                  type: string
+                  example: 10th               
+      responses:
+        201:
+          description: sign in with google successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/user-profile:
+    post:
+      summary: update profile picture
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile_picture:
+                  type: string
+                  format: binary                
+      responses:
+        201:
+          description: upload profile picture  successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/profileUpdate:
+    get:
+      summary: get user profile
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object               
+      responses:
+        201:
+          description: get user profile successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/auth/deleteProfile:
+    delete:
+      summary: delete user-profile
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object                
+      responses:
+        201:
+          description: user profile deleted successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500' 
+  /api/v1/messages:
+    post:
+      summary: create rooms
+      tags:
+        - Room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object 
+              properties:
+                query:
+                  type: string
+                  example: "hello"
+                room_id:
+                  type: integer
+                  example: 12
+              required:
+                - query                   
+      responses:
+        201:
+          description: room created successfully
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'                                                                              
+  /api/v1/rooms:
+    get:
+      summary: fetch the rooms
+      tags:
+        - Room
+      responses:
+        201:
+          description: rooms successfully fetched
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/rooms/{id}:
+    get:
+      summary: Get information about a specific room
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: The ID of the room to fetch
+      responses:
+        201:
+          description: room successfully fetched
+          $ref: '#/components/responses/200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+
+  /api/v1/rooms/{id}/messages:
+    get:
+      summary: Get paginated messages from a room
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the room to fetch messages for
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            example: 1
+          description: Page number for pagination (starts from 1)
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            example: 10
+          description: Number of messages per page
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            example: 0
+          description: Number of records to skip before starting to fetch messages
+      responses:
+        200:
+          description: Messages fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                  success:
+                    type: boolean
+                    example: true
+                message:
+                  type: string
+                  example: messages fetched successfully with pagination
+                success:
+                  type: boolean
+                  example: true
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          description: Internal Server Error
+          $ref: '#/components/responses/500'
+

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { prisma } from '../config/db';
 import { ApiError } from '../utils/ApiError';
 
@@ -17,14 +16,9 @@ class PdfService {
     id: string,
     data: Partial<{ title: string; file_url: string }>,
   ) {
-    const updateData: { title?: string; file_url?: string } = {};
-
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.file_url !== undefined) updateData.file_url = data.file_url;
-
     const updatedRecord = await prisma.document.update({
       where: { id: Number(id) },
-      data: updateData,
+      data,
     });
 
     return updatedRecord;

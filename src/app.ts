@@ -31,7 +31,7 @@ app.use('/health', (req, res) => res.send('OK'));
 app.use(Promisify(verifyApiKey));
 app.use(`/api/${APIVERSION.V1}/auth`, authRouter);
 app.use(`/api/${APIVERSION.V1}`, messageRouter);
-app.use(`/api/${APIVERSION.V1}`, pdfRouter);
+app.use(`/api/${APIVERSION.V1}/uploads`, pdfRouter);
 app.use(errorHandler);
 
 export { app };

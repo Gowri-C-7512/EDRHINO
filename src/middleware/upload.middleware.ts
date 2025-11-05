@@ -104,7 +104,7 @@ function pdfFilter(
 const pdfUpload = multer({
   storage: storages,
   fileFilter: pdfFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // optional limit: 10 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // optional limit: 10 MB
 });
 
 export default pdfUpload;

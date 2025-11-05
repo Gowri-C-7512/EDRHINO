@@ -55,17 +55,3 @@ export class RefreshRequestDTO {
   @IsNotEmpty()
   refreshToken!: string;
 }
-
-export class QuestionRequestDTO {
-  @IsString()
-  @IsNotEmpty()
-  subject!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  standard!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  token!: string;
-}

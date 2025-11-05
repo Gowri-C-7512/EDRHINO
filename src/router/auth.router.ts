@@ -10,21 +10,26 @@ authRouter.route('/register').post(Promisify(authController.register));
 authRouter.route('/otp-verify').post(Promisify(authController.verifyOtp));
 authRouter.route('/login').post(Promisify(authController.login));
 authRouter
-    .route('/forgot-password')
-    .post(Promisify(authController.forgotPassword));
+  .route('/forgot-password')
+  .post(Promisify(authController.forgotPassword));
 authRouter
-    .route('/reset-password')
-    .post(Promisify(authController.resetPassword));
+  .route('/reset-password')
+  .post(Promisify(authController.resetPassword));
 authRouter.route('/logout').post(Promisify(authController.logout));
 authRouter.route('/refresh').post(Promisify(authController.refresh));
 authRouter.route('/question').post(Promisify(authController.question));
-// authRouter.route('/google').post(Promisify(authController.google));
+authRouter.route('/google').post(Promisify(authController.google));
 authRouter
-    .route('/user')
-    .patch(
-        verifyjwt,
-        upload.single('profile'),
-        Promisify(authController.updateuser),
-    );
+  .route('/user-profile')
+  .patch(
+    verifyjwt,
+    upload.single('profile'),
+    Promisify(authController.updateUser),
+  );
+authRouter
+  .route('/profileUpdate')
+  .get(verifyjwt, Promisify(authController.getUser));
+authRouter
+  .route('/deleteProfile')
+  .delete(verifyjwt, Promisify(authController.deleteUser));
 export { authRouter };
-

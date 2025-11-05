@@ -3,12 +3,13 @@ import { Request, Response } from 'express';
 import path from 'path';
 import {
   ForgotRequestDTO,
+  GoogleSignInDTO,
   LoginRequestDTO,
   LogoutRequestDTO,
   QuestionRequestDTO,
   RefreshRequestDTO,
   RegisterRequestDTO,
-  ResetRequestDTO
+  ResetRequestDTO,
 } from '../dto/auth.dto';
 import { WithUserRequest } from '../middleware/auth.middleware';
 import { authService } from '../services/auth.service';
@@ -38,6 +39,7 @@ class AuthController {
       .status(200)
       .json(new ApiResponse(201, user, 'register successfully'));
   }
+
   verifyOtp = async (req: Request, res: Response) => {
     const { email, otp } = req.body;
 
@@ -53,6 +55,7 @@ class AuthController {
       .status(200)
       .json(new ApiResponse(200, result, 'otp verified successfully'));
   };
+
   async login(req: Request, res: Response) {
     const LoginUserRequest = new LoginRequestDTO();
     Object.assign(LoginUserRequest, req.body);
@@ -94,6 +97,7 @@ class AuthController {
 
     const { newPassword, token } = req.body;
     const result = await authService.resetPassword(newPassword, token);
+
     return res
       .status(200)
       .json(new ApiResponse(200, result, 'Password changed successfully'));
@@ -109,7 +113,6 @@ class AuthController {
     }
 
     const { refreshToken } = logoutRequest;
-
     const result = await authService.logout(refreshToken);
 
     return res
@@ -120,15 +123,30 @@ class AuthController {
   async refresh(req: Request, res: Response) {
     const RefreshUserRequest = new RefreshRequestDTO();
     Object.assign(RefreshUserRequest, req.body);
+
     const error = await validate(RefreshUserRequest);
     if (error.length > 0) throw new ApiError(400, 'invalid Token', error);
+
     const { refreshToken } = req.body;
     const result = await authService.refresh(refreshToken);
+
     return res
       .status(200)
       .json(new ApiResponse(200, result, 'refresh successfully'));
   }
 
+  async google(req: Request, res: Response) {
+    const GoogleUserLogin = new GoogleSignInDTO();
+    Object.assign(GoogleUserLogin, req.body);
+
+    const error = await validate(GoogleUserLogin);
+    if (error.length > 0) throw new ApiError(400, 'invalid Token', error);
+
+    const { token } = req.body;
+    const result = await authService.google(token);
+
+    return res.status(200).json(new ApiResponse(200, result, result.message));
+  }
   async question(req: Request, res: Response) {
     const RefreshUserRequest = new QuestionRequestDTO();
     Object.assign(RefreshUserRequest, req.body);
@@ -141,7 +159,7 @@ class AuthController {
       .json(new ApiResponse(200, result, 'subject added successfully'));
   }
 
-  updateuser = async (req: WithUserRequest, res: Response) => {
+  async updateUser(req: WithUserRequest, res: Response) {
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(401, 'Unauthorized');
@@ -167,20 +185,25 @@ class AuthController {
     return res
       .status(200)
       .json(new ApiResponse(200, updatedUser, 'User updated successfully'));
-  };
+  }
 
-  // async google(req: Request, res: Response) {
-  //   const GoogleUserLogin = new GoogleSignInDTO();
-  //   Object.assign(GoogleUserLogin, req.body);
-  //   const error = await validate(GoogleUserLogin);
-  //   if (error.length > 0) throw new ApiError(400, 'invalid Token', error);
-  //   const { token } = req.body;
-  //   const result = await authService.google(token);
-  //   return res
-  //     .status(200)
-  //     .json(new ApiResponse(200, result, 'sign with google successfully'));
-  // }
+  async getUser(req: WithUserRequest, res: Response) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+    const user = await authService.get_user(userId);
+    return res.status(200).json(new ApiResponse(200, user, 'User found'));
+  }
+
+  async deleteUser(req: WithUserRequest, res: Response) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+    const user = await authService.delete_user(userId);
+    return res.status(200).json(new ApiResponse(200, user, 'User deleted'));
+  }
 }
 const authController = new AuthController();
 export { authController };
-

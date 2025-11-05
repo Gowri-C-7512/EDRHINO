@@ -34,4 +34,27 @@ model User {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    Room      Room[]
+}
+
+model Room {
+    room_name String
+    room_id   Int       @id @default(autoincrement())
+    user_id   Int
+    users     User      @relation(fields: [user_id], references: [id])
+    message   Message[]
+}
+
+enum Role {
+    USER
+    ASSISTANT
+}
+
+model Message {
+    role      Role?
+    content   String
+    id        Int      @id @default(autoincrement())
+    room_id   Int
+    createdAt DateTime @default(now())
+    room      Room     @relation(fields: [room_id], references: [room_id])
 }

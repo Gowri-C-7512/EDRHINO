@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Room" ALTER COLUMN "user_id" SET DATA TYPE TEXT;

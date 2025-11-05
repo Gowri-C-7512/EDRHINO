@@ -6,11 +6,11 @@ COPY package.json /app
 
 RUN npm install
 
-RUN npx prisma migrate dev
-
 RUN npm install -g pm2
 
 COPY . /app
+
+RUN npx prisma migrate dev
 
 RUN npm run build
 

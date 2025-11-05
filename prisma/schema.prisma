@@ -58,3 +58,11 @@ model Message {
     createdAt DateTime @default(now())
     room      Room     @relation(fields: [room_id], references: [room_id])
 }
+
+model Document {
+    id         Int      @id @default(autoincrement())
+    title      String
+    file_url   String
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+}

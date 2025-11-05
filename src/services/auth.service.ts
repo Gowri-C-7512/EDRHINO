@@ -378,7 +378,6 @@ class AuthService {
     if (!user) {
       throw new ApiError(404, 'User not found');
     }
-    console.log(user, 'users');
     return user;
   }
 }

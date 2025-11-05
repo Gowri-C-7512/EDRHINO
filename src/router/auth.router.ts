@@ -20,7 +20,7 @@ authRouter.route('/refresh').post(Promisify(authController.refresh));
 authRouter.route('/question').post(Promisify(authController.question));
 authRouter.route('/google').post(Promisify(authController.google));
 authRouter
-  .route('/user-profile')
+  .route('/uploads')
   .patch(
     verifyjwt,
     upload.single('profile'),

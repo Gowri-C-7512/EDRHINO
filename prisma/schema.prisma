@@ -58,3 +58,19 @@ model Message {
     createdAt DateTime @default(now())
     room      Room     @relation(fields: [room_id], references: [room_id])
 }
+
+
+model Checkpoints {
+  id                  Int       @id @default(autoincrement())
+  checkpointId        String    @unique          // corresponds to checkpoint_id
+  checkpointNs        String?                     // corresponds to checkpoint_ns
+  threadId            String                      // corresponds to thread_id
+  checkpoint          Json                        // decoded JSON from Binary
+  metadata            Json?                       // decoded JSON from Binary
+  parentCheckpointId  String?                     // corresponds to parent_checkpoint_id
+  type                String?                     // e.g. "json"
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([threadId])
+}

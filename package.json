@@ -12,6 +12,9 @@
     "lint:fix": "eslint --fix src/"
   },
   "dependencies": {
+    "@langchain/core": "^1.0.2",
+    "@langchain/langgraph-checkpoint-postgres": "^1.0.0",
+    "@langchain/openai": "^1.0.0",
     "@prisma/client": "^6.18.0",
     "axios": "^1.7.7",
     "bcrypt": "^6.0.0",
@@ -21,6 +24,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "jose": "^6.1.0",
+    "langchain": "^1.0.2",
     "mongoose": "^8.6.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",

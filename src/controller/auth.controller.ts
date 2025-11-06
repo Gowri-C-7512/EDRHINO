@@ -6,7 +6,6 @@ import {
   GoogleSignInDTO,
   LoginRequestDTO,
   LogoutRequestDTO,
-  QuestionRequestDTO,
   RefreshRequestDTO,
   RegisterRequestDTO,
   ResetRequestDTO,
@@ -146,17 +145,6 @@ class AuthController {
     const result = await authService.google(token);
 
     return res.status(200).json(new ApiResponse(200, result, result.message));
-  }
-  async question(req: Request, res: Response) {
-    const RefreshUserRequest = new QuestionRequestDTO();
-    Object.assign(RefreshUserRequest, req.body);
-    const error = await validate(RefreshUserRequest);
-    if (error.length > 0) throw new ApiError(400, 'invalid Token', error);
-    const userData: QuestionRequestDTO = req.body;
-    const result = await authService.question(userData);
-    return res
-      .status(200)
-      .json(new ApiResponse(200, result, 'subject added successfully'));
   }
 
   async updateUser(req: WithUserRequest, res: Response) {

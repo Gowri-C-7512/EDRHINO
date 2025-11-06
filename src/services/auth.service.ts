@@ -1,8 +1,7 @@
-import { User } from '@prisma/client';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/db';
-import { QuestionRequestDTO, RegisterRequestDTO } from '../dto/auth.dto';
+import { RegisterRequestDTO } from '../dto/auth.dto';
 import { ApiError } from '../utils/ApiError';
 import { ApiResponse } from '../utils/ApiResponse';
 import {
@@ -324,35 +323,14 @@ class AuthService {
       message: 'Signup successfully',
     };
   }
-  async question(userData: QuestionRequestDTO) {
-    if (!userData.token) throw new ApiError(400, 'token required');
 
-    const { payload } = await verifyToken(userData.token);
-
-    if (!payload.email) {
-      throw new ApiError(400, 'token does not match this user');
-    }
-    const user = await prisma.user.findUnique({
-      where: { email: payload.email },
-    });
-
-    if (!user) throw new ApiError(404, 'User not found');
-
-    const userUpdated = await prisma.user.update({
-      where: { email: payload.email },
-      data: {
-        subject: userData.subject,
-        standard: userData.standard,
-      },
-    });
-    return userUpdated;
-  }
-
-  async update_user(userId: number, updateData: Partial<User>) {
-    console.log(updateData, 'update');
+  async update_user(
+    userId: number,
+    data: Partial<{ profile: string; subject: string; standard: string }>,
+  ) {
     const updateUser = await prisma.user.update({
       where: { id: userId },
-      data: updateData,
+      data,
     });
     const { password, ...safeUser } = updateUser;
     console.log(password);

@@ -48,3 +48,63 @@ export const upload = multer({
     fileSize: 50 * 1000 * 1000,
   },
 });
+
+const storages = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const folderPath = path.join('./', 'uploads/pdf');
+
+    // Create folder if it doesn't exist
+    if (fs.existsSync(folderPath)) {
+      logger.info('Folder already exists');
+    } else {
+      fs.mkdirSync(folderPath, { recursive: true });
+      logger.info('Folder created successfully');
+    }
+    cb(null, 'uploads/pdf'); // folder for PDF uploads
+  },
+
+  filename: function (req, file, cb) {
+    // Extract extension
+    let fileExtension = '';
+    if (file.originalname.includes('.')) {
+      fileExtension = file.originalname.substring(
+        file.originalname.lastIndexOf('.'),
+      );
+    }
+    const filenameWithoutExtension = file.originalname
+      .toLowerCase()
+      .split(' ')
+      .join('-')
+      ?.split('.')[0];
+
+    const uniqueName =
+      filenameWithoutExtension +
+      Date.now() +
+      Math.ceil(Math.random() * 1e5) +
+      fileExtension;
+
+    cb(null, uniqueName);
+  },
+});
+
+// Allow only PDFs
+function pdfFilter(
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback,
+) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ext === '.pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDFs are allowed!'));
+  }
+}
+
+const pdfUpload = multer({
+  storage: storages,
+  fileFilter: pdfFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // optional limit: 10 MB
+});
+
+export default pdfUpload;

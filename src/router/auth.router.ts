@@ -17,7 +17,6 @@ authRouter
   .post(Promisify(authController.resetPassword));
 authRouter.route('/logout').post(Promisify(authController.logout));
 authRouter.route('/refresh').post(Promisify(authController.refresh));
-authRouter.route('/question').post(Promisify(authController.question));
 authRouter.route('/google').post(Promisify(authController.google));
 authRouter
   .route('/user-profile')

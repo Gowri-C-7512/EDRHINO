@@ -1,4 +1,5 @@
-/* eslint-disable prettier/prettier */
+import { HumanMessage } from '@langchain/core/messages';
+import { edrhinoChatBot } from '../ai/chat.graph';
 import { prisma } from '../config/db';
 import { MessageRequestDTO } from '../dto/message.dto';
 class MessageService {
@@ -23,12 +24,15 @@ class MessageService {
         room_id: room.room_id,
       },
     });
-    const reply = `You said: "${query}"`;
+    const llmState = await edrhinoChatBot.invoke(
+      { messages: [new HumanMessage(query)], user_id: userId },
+      { configurable: { thread_id: room.room_id } },
+    );
 
     const assistantMessage = await prisma.message.create({
       data: {
         role: 'ASSISTANT',
-        content: reply,
+        content: llmState.messages.slice(-1)[0].text,
         room_id: room.room_id,
       },
     });

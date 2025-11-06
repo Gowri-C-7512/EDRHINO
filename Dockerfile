@@ -4,13 +4,13 @@ WORKDIR /app
 
 COPY package.json /app
 
-COPY .npmrc /app
-
 RUN npm install
 
 RUN npm install -g pm2
 
 COPY . /app
+
+RUN npx prisma migrate dev
 
 RUN npm run build
 

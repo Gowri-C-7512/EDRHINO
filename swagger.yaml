@@ -5,7 +5,7 @@ info:
   description: API to demonstrate example responses in Swagger YAML
 
 servers:
-  - url: http://localhost:5000
+  - url: https://api.edrhino.baboolsoft.com/api-docs/
 
 components:
   securitySchemes:
@@ -433,6 +433,9 @@ paths:
                 profile:
                   type: string
                   format: binary
+                name:
+                  type: string
+                  example: John Doe  
                 subject:
                   type: string
                   example: maths

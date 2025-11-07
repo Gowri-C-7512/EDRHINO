@@ -10,7 +10,7 @@ export const sendOTPEmail = async (email: string, otp: number) => {
   });
 
   await transporter.sendMail({
-    from: `"Tutor Appointy" <${process.env.z_USER}>`,
+    from: `"EDRHINO" <${process.env.z_USER}>`,
     to: email,
     subject: 'Email Verification OTP',
     text: `Your Tutor Appointy verification OTP is ${otp}. It is valid for 10 minutes.`,
@@ -25,8 +25,8 @@ export const sendVerificationEmail = async (to: string, token: string) => {
       pass: process.env.EMAIL_PASS,
     },
   });
-
-  const verificationUrl = `http://localhost:5000/api/auth/verify-email?token=${token}`;
+  const baseUrl = process.env.FRONTEND_URL;
+  const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,

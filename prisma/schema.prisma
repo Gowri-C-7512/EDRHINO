@@ -8,8 +8,13 @@ datasource db {
 }
 
 enum Provider {
-    email
-    google
+    EMAIL
+    GOOGLE
+}
+
+enum Gender {
+    Male
+    FEMALE
 }
 
 model User {
@@ -23,6 +28,8 @@ model User {
     subject  String?
     profile  String?
     provider Provider?
+    gender   Gender?
+    language String?
 
     otp           Int?
     otp_expiry    DateTime?

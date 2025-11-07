@@ -39,6 +39,15 @@ components:
           type: string
           enum: ['email', 'google']
           example: 'email'
+        profile:
+          type: string
+          example: 'https://example.com/profile.jpg'
+        language:
+          type: string
+          example: 'en'
+        gender:
+          type: string
+          example: 'male' 
         is_active:
           type: boolean
           example: true
@@ -90,14 +99,33 @@ components:
           type: number
           example: 1
         createdAt:
-          type: string
-          format: date-time
+          type: strte-time
           example: '2025-07-28T10:15:30Z'
         updatedAt:
-          type: string
+          type: stringing
+          format: da
           format: date-time
           example: '2025-07-28T10:15:30Z'
-
+    Pdf:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+        title:
+          type: string
+          example: 'science'
+        file_url:
+          type: profile
+          example: 
+        createdAt:
+          type: strte-time
+          example: '2025-07-28T10:15:30Z'
+        updatedAt:
+          type: stringing
+          format: da
+          format: date-time
+          example: '2025-07-28T10:15:30Z'
   responses:
     200:
       content:
@@ -143,8 +171,8 @@ components:
               success:
                 type: boolean
                 example: false
-  responses:
-    200:
+
+    R200:
       content:
         application/json:
           schema:
@@ -157,7 +185,22 @@ components:
                 $ref: '#/components/schemas/room'
               success:
                 type: boolean
-                example: true               
+                example: true
+
+    P200:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: number
+                example: 201
+              data:
+                $ref: '#/components/schemas/pdf'
+              success:
+                type: boolean
+                example: true                              
 security:
   - bearerAuth: []
   - ApiKeyAuth: []
@@ -284,10 +327,10 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                token:
                   type: string
-                  example: user@example.com
-                newPassword:
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX
+                new_password:
                   type: string
                   format: password
                   example: P@ssw0rd
@@ -372,38 +415,14 @@ paths:
           $ref: '#/components/responses/400'
         500:
           $ref: '#/components/responses/500' 
-  /api/v1/auth/question:
-    post:
-      summary: register subject and standard
-      tags:
-        - Auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                 subject:
-                  type: string
-                  example: maths
-                 standard:
-                  type: string
-                  example: 10th               
-      responses:
-        201:
-          description: sign in with google successfully
-          $ref: '#/components/responses/200'
-        400:
-          description: Bad request
-          $ref: '#/components/responses/400'
-        500:
-          $ref: '#/components/responses/500'
+
   /api/v1/auth/user-profile:
-    post:
+    patch:
       summary: update profile picture
       tags:
         - Auth
+      security:
+        - bearerAuth: []  
       requestBody:
         required: true
         content:
@@ -411,9 +430,24 @@ paths:
             schema:
               type: object
               properties:
-                profile_picture:
+                profile:
                   type: string
-                  format: binary                
+                  format: binary
+                subject:
+                  type: string
+                  example: maths
+                standard:
+                  type: string
+                  example: 10th
+                board:
+                  type: string
+                  example: matriculation
+                language:
+                  type: string
+                  example: english
+                gender:
+                  type: string
+                  example: male
       responses:
         201:
           description: upload profile picture  successfully
@@ -423,17 +457,13 @@ paths:
           $ref: '#/components/responses/400'
         500:
           $ref: '#/components/responses/500'
-  /api/v1/auth/profileUpdate:
+  /api/v1/auth/profile:
     get:
       summary: get user profile
       tags:
         - Auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object               
+      security:
+        - bearerAuth: []               
       responses:
         201:
           description: get user profile successfully
@@ -592,4 +622,125 @@ paths:
         500:
           description: Internal Server Error
           $ref: '#/components/responses/500'
-
+  /api/v1/uploads/pdf:
+    post:
+      summary: upload pdf
+      tags:
+        - Pdf
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: number
+                  example: 1
+                title:
+                  type: string
+                  example: maths
+                file_url:
+                  type: string
+                  format: binary
+      responses:
+        201:
+          description: upload pdf  successfully
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/uploads/updatePdf:
+    patch:
+      summary: update pdf
+      tags:
+        - Pdf
+      parameters:
+        - in: path
+          name: id
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: number
+                    example: 1
+                  title:
+                    type: string
+                    example: maths
+                  file_url:
+                    type: string
+                    format: binary
+      responses:
+        201:
+          description: update pdf  successfully
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'          
+  /api/v1/uploads/pdfs/{id}:
+    get:
+      summary: Get information about a specific pdf
+      tags:
+        - Pdf
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: The ID of the pdf to fetch
+      responses:
+        201:
+          description: pdf successfully fetched
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/uploads/pdfs:
+    get:
+      summary: Get all information about  pdf
+      tags:
+        - Pdf
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: all pdf to fetch
+      responses:
+        201:
+          description: pdf successfully fetched
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/uploads/deletePdf/{id}:
+    delete:
+      summary: delete user-profile
+      tags:
+        - Pdf
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: object                
+      responses:
+        201:
+          description: pdf deleted successfully
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'                   

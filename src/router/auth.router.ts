@@ -25,9 +25,7 @@ authRouter
     upload.single('profile'),
     Promisify(authController.updateUser),
   );
-authRouter
-  .route('/profileUpdate')
-  .get(verifyjwt, Promisify(authController.getUser));
+authRouter.route('/profile').get(verifyjwt, Promisify(authController.getUser));
 authRouter
   .route('/deleteProfile')
   .delete(verifyjwt, Promisify(authController.deleteUser));

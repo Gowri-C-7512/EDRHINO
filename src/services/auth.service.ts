@@ -1,5 +1,6 @@
 import axios from 'axios';
 import bcrypt from 'bcrypt';
+import { User } from '../@types/auth';
 import { prisma } from '../config/db';
 import { RegisterRequestDTO } from '../dto/auth.dto';
 import { ApiError } from '../utils/ApiError';
@@ -30,7 +31,7 @@ class AuthService {
         password: hashedPassword,
         otp,
         otp_expiry: otpExpiry,
-        provider: 'email',
+        provider: 'EMAIL',
         last_login: new Date(),
         is_active: true,
       },
@@ -143,11 +144,11 @@ class AuthService {
     });
 
     if (!user) throw new ApiError(404, 'User not found');
-
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({
       where: { email: payload.email },
       data: {
-        password: newPassword,
+        password: hashedPassword,
       },
     });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -241,7 +242,7 @@ class AuthService {
     });
 
     if (user) {
-      if (user.provider !== 'google') {
+      if (user.provider !== 'GOOGLE') {
         throw new ApiResponse(
           403,
           null,
@@ -289,7 +290,7 @@ class AuthService {
         name: name,
         password: hashedPassword,
         profile: picture,
-        provider: 'google',
+        provider: 'GOOGLE',
         last_login: new Date(),
         is_active: true,
         is_verify: true,
@@ -324,10 +325,7 @@ class AuthService {
     };
   }
 
-  async update_user(
-    userId: number,
-    data: Partial<{ profile: string; subject: string; standard: string }>,
-  ) {
+  async update_user(userId: number, data: Partial<User>) {
     const updateUser = await prisma.user.update({
       where: { id: userId },
       data,

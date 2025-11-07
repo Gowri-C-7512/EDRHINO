@@ -6,6 +6,7 @@ import {
   GoogleSignInDTO,
   LoginRequestDTO,
   LogoutRequestDTO,
+  ProfileRequestDTO,
   RefreshRequestDTO,
   RegisterRequestDTO,
   ResetRequestDTO,
@@ -152,8 +153,14 @@ class AuthController {
     if (!userId) {
       throw new ApiError(401, 'Unauthorized');
     }
+    const ProfileRequest = new ProfileRequestDTO();
+    Object.assign(ProfileRequest, req.body);
+    const error = await validate(ProfileRequest);
+    if (error.length > 0) {
+      throw new ApiError(400, 'invalid inputs', error);
+    }
     let file_name = ' ';
-    const userData = req.body;
+    const userData: ProfileRequestDTO = req.body;
     if (req.file) {
       const fileData = req.file;
 

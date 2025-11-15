@@ -4,7 +4,7 @@ import {
   SystemMessage,
 } from '@langchain/core/messages';
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
-import { aiMemory, graphCheckPointer } from './memory';
+import { getCheckpointer, getMemory } from './memory';
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseTutorPrompt } from './prompt';
 
@@ -35,8 +35,8 @@ const graph = new StateGraph(State)
   .addEdge('call_llm', END);
 
 const edrhinoChatBot = graph.compile({
-  checkpointer: graphCheckPointer,
-  store: aiMemory,
+  checkpointer: getCheckpointer(),
+  store: getMemory(),
 });
 
 export { edrhinoChatBot };

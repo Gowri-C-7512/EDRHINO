@@ -6,12 +6,13 @@ import Promisify from '../utils/Promisify';
 const pdfRouter = Router();
 
 pdfRouter
-  .route('/pdf')
-  .post(pdfUpload.single('file_url'), Promisify(pdfController.uploadPdf));
-pdfRouter.route('/pdfs/:id').get(Promisify(pdfController.getPdf));
-pdfRouter.route('/pdfs').get(Promisify(pdfController.getAllPdf));
-pdfRouter.route('/deletePdf/:id').delete(Promisify(pdfController.deletePdf));
+  .route('/')
+  .post(pdfUpload.single('file_url'), Promisify(pdfController.uploadPdf))
+  .get(Promisify(pdfController.getAllPdf));
 pdfRouter
-  .route('/updatePdf/:id')
+  .route('/:id')
+  .get(Promisify(pdfController.getPdf))
+  .delete(Promisify(pdfController.deletePdf))
   .patch(pdfUpload.single('file_url'), Promisify(pdfController.updatePdf));
+
 export { pdfRouter };

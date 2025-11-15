@@ -5,7 +5,8 @@ info:
   description: API to demonstrate example responses in Swagger YAML
 
 servers:
-  - url: https://api.edrhino.baboolsoft.com/api-docs/
+  - url: https://api.edrhino.baboolsoft.com
+  - url: http://localhost:5000
 
 components:
   securitySchemes:
@@ -137,7 +138,7 @@ components:
                 type: number
                 example: 201
               data:
-                $ref: '#/components/schemas/users'
+                $ref: '#/components/schemas/User'
               success:
                 type: boolean
                 example: true
@@ -182,7 +183,7 @@ components:
                 type: number
                 example: 201
               data:
-                $ref: '#/components/schemas/room'
+                $ref: '#/components/schemas/Room'
               success:
                 type: boolean
                 example: true
@@ -197,7 +198,7 @@ components:
                 type: number
                 example: 201
               data:
-                $ref: '#/components/schemas/pdf'
+                $ref: '#/components/schemas/Pdf'
               success:
                 type: boolean
                 example: true                              
@@ -625,7 +626,7 @@ paths:
         500:
           description: Internal Server Error
           $ref: '#/components/responses/500'
-  /api/v1/uploads/pdf:
+  /api/v1/uploads:
     post:
       summary: upload pdf
       tags:
@@ -655,7 +656,20 @@ paths:
           $ref: '#/components/responses/400'
         500:
           $ref: '#/components/responses/500'
-  /api/v1/uploads/updatePdf:
+    get:
+      summary: Get all information about  pdf
+      tags:
+        - Pdf
+      responses:
+        201:
+          description: pdf successfully fetched
+          $ref: '#/components/responses/P200'
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/500'
+  /api/v1/uploads/{id}:
     patch:
       summary: update pdf
       tags:
@@ -685,8 +699,7 @@ paths:
           description: Bad request
           $ref: '#/components/responses/400'
         500:
-          $ref: '#/components/responses/500'          
-  /api/v1/uploads/pdfs/{id}:
+          $ref: '#/components/responses/500'
     get:
       summary: Get information about a specific pdf
       tags:
@@ -707,28 +720,6 @@ paths:
           $ref: '#/components/responses/400'
         500:
           $ref: '#/components/responses/500'
-  /api/v1/uploads/pdfs:
-    get:
-      summary: Get all information about  pdf
-      tags:
-        - Pdf
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: number
-          required: true
-          description: all pdf to fetch
-      responses:
-        201:
-          description: pdf successfully fetched
-          $ref: '#/components/responses/P200'
-        400:
-          description: Bad request
-          $ref: '#/components/responses/400'
-        500:
-          $ref: '#/components/responses/500'
-  /api/v1/uploads/deletePdf/{id}:
     delete:
       summary: delete user-profile
       tags:
@@ -746,4 +737,4 @@ paths:
           description: Bad request
           $ref: '#/components/responses/400'
         500:
-          $ref: '#/components/responses/500'                   
+          $ref: '#/components/responses/500'                            

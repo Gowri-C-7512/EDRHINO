@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
-import path from 'path';
 import { pdfService } from '../services/pdf.service';
 import { ApiResponse } from '../utils/ApiResponse';
-import { getStaticPdfFilePath } from '../utils/help.utils';
-import logger from '../utils/winston.logger';
+import { getLocalPath, getStaticPdfFilePath } from '../utils/help.utils';
 
 class PdfController {
   async uploadPdf(req: Request, res: Response) {
-    let file_name = ' ';
     const userData = req.body;
     if (req.file) {
       const fileData = req.file;
@@ -16,15 +13,9 @@ class PdfController {
         ? getStaticPdfFilePath(req, fileData.filename)
         : '';
       userData.file_url = file_url;
-      file_name = fileData.filename;
-      if (file_name) {
-        const ext = path.extname(file_name).toLowerCase();
-        logger.info(`ext:${ext}`);
-      }
-      logger.info(`filename ${file_name}`);
+      pdfService.processPdfFile(getLocalPath(fileData.filename));
     }
     const updatedUser = await pdfService.uploadPdf(userData);
-
     return res
       .status(200)
       .json(new ApiResponse(200, updatedUser, 'Upload pdf successfully'));

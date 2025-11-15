@@ -8,7 +8,7 @@ export const getStaticFilePath = (req: Request, fileName: string) => {
 };
 
 export const getLocalPath = (fileName: string) => {
-  return `public/files/${fileName}`;
+  return `uploads/pdf/${fileName}`;
 };
 
 export const getStaticPdfFilePath = (req: Request, fileName: string) => {

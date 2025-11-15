@@ -12,6 +12,7 @@
     "lint:fix": "eslint --fix src/"
   },
   "dependencies": {
+    "@langchain/community": "1.0",
     "@langchain/core": "^1.0.2",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.0",
     "@langchain/openai": "^1.0.0",
@@ -30,6 +31,7 @@
     "multer": "^2.0.2",
     "node-mongo-express-template": "file:",
     "nodemailer": "^7.0.10",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.16.3",
     "prisma": "^6.18.0",
     "reflect-metadata": "^0.2.2",

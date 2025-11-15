@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Request } from 'express';
 import fs from 'fs';
 import logger from './winston.logger';

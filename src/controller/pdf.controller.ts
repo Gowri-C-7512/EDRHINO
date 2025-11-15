@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Request, Response } from 'express';
 import path from 'path';
 import { pdfService } from '../services/pdf.service';
